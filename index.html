@@ -391,9 +391,9 @@ function setupHTML(){
 /* ====== YÖNETİCİ ====== */
 function tab(t){ state.tab=t; route(); }
 function adminHTML(){
-  const t=state.tab||'kayit', tabs=[['kayit','Kayıtlar'],['ogr','Öğretmenler'],['qr','QR kodu'],['ayar','Okul ayarları'],['kil','Kılavuz']];
+  const t=state.tab||'kayit', tabs=[['kayit','Kayıtlar'],['ogr','Öğretmenler'],['qr','QR kodu'],['ayar','Okul ayarları']];
   return `<div class="tabs noprint" role="tablist" style="margin-top:0">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${t===k}" onclick="tab('${k}')">${l}</button>`).join('')}</div>
-  ${t==='kayit'?logHTML():t==='ogr'?'<div id="tarea"><p class="muted">Yükleniyor…</p></div>':t==='qr'?qrHTML():t==='ayar'?settingsHTML():guideHTML()}`;
+  ${t==='kayit'?logHTML():t==='ogr'?'<div id="tarea"><p class="muted">Yükleniyor…</p></div>':t==='qr'?qrHTML():t==='ayar'?settingsHTML():logHTML()}`;
 }
 async function names(){
   const {data}=await sb.from('profiles').select('id,full_name,username,cls,role,active,must_change').order('full_name');
