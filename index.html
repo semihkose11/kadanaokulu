@@ -51,6 +51,8 @@ a{color:var(--ink)}
 .brand{line-height:1.2;font-weight:700;font-size:22px;text-decoration:none;letter-spacing:-.01em}
 .brand{display:inline-flex;align-items:center;gap:10px;justify-content:center}
 .brand .logo{width:44px;height:44px;flex:none}
+.home{display:flex;justify-content:center;align-items:center;min-height:calc(100vh - 160px)}
+.home img{width:min(300px,72vw);height:auto}
 main{max-width:760px;margin:0 auto;padding:26px 20px 60px}
 .lead{color:var(--soft);font-size:17px;margin-bottom:22px}
 label{display:block;font-weight:600;font-size:16px;margin:16px 0 6px}
@@ -197,7 +199,7 @@ async function route(){
     else if(path==='sifre') html=me?pwHTML():(go('giris'),null);
     else if(path==='ogretmen') html=me?.role==='teacher'?(me.must_change?(go('sifre'),null):await teacherHTML()):(go('giris'),null);
     else if(path==='yonetici') html=me?.role==='admin'?adminHTML():(go('giris'),null);
-    else { html=' '; try{ if(location.pathname!==BASE+'anasayfa') history.replaceState(null,'',BASE+'anasayfa'); }catch(e){} }
+    else { html='<div class="home"><img src="'+BASE+'callister.jpg" alt="Callister" width="300" height="300"></div>'; try{ if(location.pathname!==BASE+'anasayfa') history.replaceState(null,'',BASE+'anasayfa'); }catch(e){} }
   }catch(e){ html=`<h1>Bağlantı sorunu</h1><p class="lead">Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip sayfayı yenileyin.</p>`; console.error(e); }
   if(my!==seq||html===null) return;
   $('app').innerHTML=html;
