@@ -199,7 +199,7 @@ async function route(){
     else if(path==='sifre') html=me?pwHTML():(go('giris'),null);
     else if(path==='ogretmen') html=me?.role==='teacher'?(me.must_change?(go('sifre'),null):await teacherHTML()):(go('giris'),null);
     else if(path==='yonetici') html=me?.role==='admin'?adminHTML():(go('giris'),null);
-    else { html='<div class="home"><img src="'+BASE+'callister.jpg" alt="Callister" width="300" height="300"></div>'; try{ if(location.pathname!==BASE+'anasayfa') history.replaceState(null,'',BASE+'anasayfa'); }catch(e){} }
+    else { html=' '; try{ if(location.pathname!==BASE+'anasayfa') history.replaceState(null,'',BASE+'anasayfa'); }catch(e){} }
   }catch(e){ html=`<h1>Bağlantı sorunu</h1><p class="lead">Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip sayfayı yenileyin.</p>`; console.error(e); }
   if(my!==seq||html===null) return;
   $('app').innerHTML=html;
