@@ -235,15 +235,16 @@ async function formHTML(){
   <label for="ph">Telefonunuz</label><input id="ph" type="tel" inputmode="tel" autocomplete="tel" placeholder="05xx xxx xx xx" value="${esc(f.ph)}">
   <label for="cn">Çocuğunuzun adı soyadı</label><input id="cn" value="${esc(f.cn)}">
   <div class="row">
-    <div><label for="rel">Yakınlığınız</label><select id="rel">${RELS.map(r=>`<option ${f.rel===r?'selected':''}>${r}</option>`).join('')}</select></div>
+    <div><label for="rel">Yakınlığınız</label><select id="rel" onchange="grab();route().then(()=>{const x=$('relx');if(x)x.focus()})">${RELS.map(r=>`<option ${f.rel===r?'selected':''}>${r}</option>`).join('')}</select></div>
     <div><label for="pu">Geliş amacınız</label><select id="pu">${PURPOSES.map(p=>`<option ${f.pu===p?'selected':''}>${p}</option>`).join('')}</select></div>
   </div>
+  ${f.rel==='Diğer'?`<label for="relx">Yakınlığınızı yazın</label><input id="relx" maxlength="40" placeholder="Örneğin: Teyze, Dede, Bakıcı" value="${esc(f.relx)}">`:''}
   <label>Çocuğunuzun sınıfı</label>
   <div class="opts">${CLASSES.map((c,i)=>`<button type="button" class="opt" aria-pressed="${f.sc===c}" onclick="pick(${i})"><span>${c}</span></button>`).join('')}</div>
   <button class="dark wide" id="sendbtn" onclick="send()">Öğretmene haber ver</button>
   <div class="err" id="err" role="alert"></div>`;
 }
-function grab(){const f=state.f||{};['pn','ph','cn','rel','pu'].forEach(k=>{const e=$(k);if(e)f[k]=e.value});state.f=f;return f}
+function grab(){const f=state.f||{};['pn','ph','cn','rel','relx','pu'].forEach(k=>{const e=$(k);if(e)f[k]=e.value});state.f=f;return f}
 function pick(i){ grab().sc=CLASSES[i]; route(); }
 async function send(){
   const f=grab();
@@ -251,9 +252,10 @@ async function send(){
   const digits=(f.ph||'').replace(/\D/g,'');
   if(digits.length<10||digits.length>13) return setErr('Telefon numaranızı 10 veya 11 rakam olarak yazın.');
   if(!f.cn?.trim()||f.cn.trim().length<2) return setErr('Çocuğunuzun adını ve soyadını yazın.');
+  if(f.rel==='Diğer'&&!(f.relx||'').trim()) return setErr('Yakınlığınızı yazın.');
   if(!f.sc) return setErr('Çocuğunuzun sınıfını seçin.');
   const b=$('sendbtn'); b.disabled=true; b.textContent='Gönderiliyor…';
-  const {data,error}=await sb.rpc('submit_visit',{p_parent:f.pn.trim(),p_phone:f.ph.trim(),p_relation:f.rel||RELS[0],p_child:f.cn.trim(),p_purpose:f.pu||PURPOSES[0],p_class:f.sc,p_school:SCHOOL_ID});
+  const {data,error}=await sb.rpc('submit_visit',{p_parent:f.pn.trim(),p_phone:f.ph.trim(),p_relation:(f.rel==='Diğer'?f.relx.trim():(f.rel||RELS[0])),p_child:f.cn.trim(),p_purpose:f.pu||PURPOSES[0],p_class:f.sc,p_school:SCHOOL_ID});
   if(error){ b.disabled=false; b.textContent='Öğretmene haber ver'; return setErr(error.message.includes('sık')?error.message:'Gönderilemedi. Lütfen tekrar deneyin.'); }
   state={}; go('gonderildi/'+data);
 }
