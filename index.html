@@ -284,7 +284,7 @@ async function sentHTML(){
   if(c.status!=='closed') state.poll=setInterval(()=>{ if(path==='gonderildi') route(); },5000);
   const st=c.status==='coming'?`<span class="status go">${esc(c.teacher_name||'Öğretmen')} geliyor</span>`:c.status==='closed'?'<span class="status">Görüşme tamamlandı</span>':'<span class="status">Yanıt bekleniyor</span>';
   return `<div class="center">
-    ${inHours()?'<h1>Haber verildi</h1>\n    <p class="lead">Öğretmen kapıda olduğunuzu öğrendi. Lütfen girişte bekleyin.</p>':'<h1>Kaydınız alındı</h1>\n    <p class="lead">Mesai saatleri (hafta içi '+HOURS[0]+' – '+HOURS[1]+') dışında olduğumuz için öğretmenlere bildirim gönderilmedi. Lütfen girişteki görevliye başvurun.</p>'}
+    ${inHours()?'<h1>Haber verildi</h1>\n    <p class="lead">Öğretmen kapıda olduğunuzu öğrendi. Lütfen girişte bekleyin.</p>':'<h1>Kaydınız alındı</h1>\n    <p class="lead">Lütfen girişte bekleyin.</p>'}
     ${st}
     <p style="margin-top:28px"><a href="#form" onclick="state={}">Yeni kayıt oluştur</a></p></div>`;
 }
