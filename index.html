@@ -290,7 +290,8 @@ async function login(){
   const u=$('lu').value.trim().toLowerCase(), p=$('lp').value;
   if(!u||!p) return setErr('Kullanıcı adı ve şifrenizi yazın.');
   const b=$('loginbtn'); b.disabled=true;
-  const {error}=await sb.auth.signInWithPassword({email:u+'@'+DOMAIN,password:p});
+  let {error}=await sb.auth.signInWithPassword({email:u+'@'+DOMAIN,password:p});
+  if(error&&/invalid/i.test(error.message)){ try{ const {data:ds}=await sb.from('schools').select('email_domain'); for(const d of (ds||[]).map(x=>x.email_domain).filter(x=>x&&x!==DOMAIN)){ const r=await sb.auth.signInWithPassword({email:u+'@'+d,password:p}); if(!r.error){ error=null; break; } } }catch(e){} }
   b.disabled=false;
   if(error) return setErr(/invalid/i.test(error.message)?'Kullanıcı adı veya şifre hatalı.':'Giriş yapılamadı. Lütfen tekrar deneyin.');
   await loadMe();
@@ -410,6 +411,7 @@ function logHTML(){
   return `<div class="seg" role="group" aria-label="Kayıt aralığı">
     <button aria-pressed="${m==='bugun'}" onclick="setMode('bugun')">Bugün</button>
     <button aria-pressed="${m==='son'}" onclick="setMode('son')">Son 500</button>
+    <button aria-pressed="${m==='cinarli'}" onclick="setMode('cinarli')">Çınarlı kayıt</button>
     <button aria-pressed="${m==='tarih'}" onclick="setMode('tarih')">Tarih gir</button>
   </div>
   ${m==='tarih'?`<label for="fd">Tarih</label><input id="fd" type="date" value="${state.day||dayKey(Date.now())}" onchange="state.day=this.value;renderLog()">`:''}
@@ -419,7 +421,9 @@ function setMode(m){ state.mode=m; state.openRec=null; route(); }
 async function fetchLog(){
   const m=state.mode||'bugun';
   let q=sb.from('visits').select('*').order('created_at',{ascending:false});
-  if(m==='son') q=q.limit(500);
+  if(m==='cinarli') q=q.ilike('child_class','%Çınarlı Anaokulu%');
+  else q=q.or('child_class.is.null,child_class.not.ilike.*Çınarlı Anaokulu*');
+  if(m==='son'||m==='cinarli') q=q.limit(500);
   else { const [a,b]=dayRange(m==='bugun'?dayKey(Date.now()):(state.day||dayKey(Date.now()))); q=q.gte('created_at',a).lt('created_at',b); }
   const {data,error}=await q; if(error) throw error; return data||[];
 }
@@ -428,7 +432,7 @@ async function renderLog(){
   let rows; try{ if(!state.people) await names(); rows=await fetchLog(); }catch(e){ el.innerHTML='<p class="err">Kayıtlar yüklenemedi. Sayfayı yenileyin.</p>'; return; }
   state.rows=rows; const m=state.mode||'bugun';
   el.innerHTML=`<p class="muted" style="margin:16px 0 4px">${rows.length} kayıt. Ayrıntı için isme dokunun.</p>
-  ${rows.length?rows.map(c=>`<details class="rec" ${state.openRec===c.id?'open':''} ontoggle="if(this.open)state.openRec='${c.id}'"><summary><b>${esc(c.parent_name)}</b><span>${m==='son'?new Date(c.created_at).toLocaleDateString('tr-TR')+' ':''}${hhmm(c.created_at)}</span></summary>
+  ${rows.length?rows.map(c=>`<details class="rec" ${state.openRec===c.id?'open':''} ontoggle="if(this.open)state.openRec='${c.id}'"><summary><b>${esc(c.parent_name)}</b><span>${m==='son'||m==='cinarli'?new Date(c.created_at).toLocaleDateString('tr-TR')+' ':''}${hhmm(c.created_at)}</span></summary>
     <dl>
       <dt>${c.relation==='Anne'||c.relation==='Baba'?'Çocuğu':'Çocuk'}</dt><dd>${esc(c.child_name)}</dd>
       <dt>Sınıf</dt><dd>${esc(c.child_class||'–')}</dd>
