@@ -240,7 +240,7 @@ async function formHTML(){
     <div><label for="rel">Yakınlığınız</label><select id="rel" onchange="grab();route().then(()=>{const x=$('relx');if(x)x.focus()})">${RELS.map(r=>`<option ${f.rel===r?'selected':''}>${r}</option>`).join('')}</select></div>
     <div><label for="pu">Geliş amacınız</label><select id="pu">${PURPOSES.map(p=>`<option ${f.pu===p?'selected':''}>${p}</option>`).join('')}</select></div>
   </div>
-  ${f.rel==='Diğer'?`<label for="relx">Yakınlığınızı yazın</label><input id="relx" maxlength="40" placeholder="Örneğin: Teyze, Dede, Bakıcı" value="${esc(f.relx)}">`:''}
+  ${f.rel==='Diğer'?`<label for="relx">Yakınlığınızı yazın</label><input id="relx" maxlength="40" value="${esc(f.relx)}">`:''}
   <label>Çocuğunuzun sınıfı</label>
   <div class="opts">${CLASSES.map((c,i)=>`<button type="button" class="opt" aria-pressed="${f.sc===c}" onclick="pick(${i})"><span>${c}</span></button>`).join('')}</div>
   <button class="dark wide" id="sendbtn" onclick="send()">Öğretmene haber ver</button>
