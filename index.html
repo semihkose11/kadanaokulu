@@ -124,7 +124,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,SCHOOL_ID==='kad'?{}:{a
 
 /* ====== telefon bildirimleri (web push) ====== */
 const PUSH_URL=SUPABASE_URL+'/functions/v1/push';
-const BASE='/'+location.pathname.split('/')[1]+'/';
+const BASE=location.hostname.endsWith('github.io')?'/'+location.pathname.split('/')[1]+'/':'/';
 if('serviceWorker' in navigator) navigator.serviceWorker.register(BASE+'sw.js',{scope:BASE}).catch(()=>{});
 const isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
