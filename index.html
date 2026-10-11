@@ -505,9 +505,7 @@ function copySetup(b){ const u=location.origin+BASE+'kurulum'; try{navigator.cli
 /* okul ayarları */
 function settingsHTML(){
   return '<label for="sn">Okulun adı</label><input id="sn" value="'+esc(school)+'" placeholder="Örneğin: Papatya Anaokulu">'
-   +'<p class="muted" style="font-size:15px">Bu ad sitenin üstünde, sekme başlığında, QR afişinde ve öğretmenlere giden bildirimlerde otomatik kullanılır. Telefonuna daha önce kurulum yapmış öğretmenlerin, bildirimin üstündeki uygulama adının da değişmesi için simgeyi silip yeniden eklemesi gerekir.</p>'
    +'<div class="row"><div><label for="ns">Bildirim başlangıcı</label><input id="ns" type="time" value="'+HOURS[0]+'"></div><div><label for="ne">Bildirim bitişi</label><input id="ne" type="time" value="'+HOURS[1]+'"></div></div>'
-   +'<p class="muted" style="font-size:15px">Bildirimler yalnızca hafta içi bu saatler arasında gönderilir. Hafta sonu ve bu saatler dışında veli kayıtları tutulur ama öğretmenlere bildirim gönderilmez. Saatler Türkiye saatine göredir.</p>'
    +'<button class="dark" onclick="saveSchool()">Kaydet</button><div class="err" id="err" role="alert"></div><p class="ok" id="snok"></p>';
 }
 async function saveSchool(){
