@@ -207,7 +207,7 @@ async function route(){
   }catch(e){ html=`<h1>Bağlantı sorunu</h1><p class="lead">Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip sayfayı yenileyin.</p>`; console.error(e); }
   if(my!==seq||html===null) return;
   $('app').innerHTML=html;
-  if(path==='yonetici'){ const t=state.tab||'kayit'; if(t==='kayit') renderLog(); if(t==='ogr') renderTeachers(); if(t==='qr') drawQR(); startLive(); }
+  if(path==='yonetici'){ const t=state.tab||'kayit'; if(t==='kayit') renderLog(); if(t==='ogr') renderTeachers(); if(t==='qr') drawQR(); if(t==='ayar') renderPin(); startLive(); }
   if(path==='ogretmen') startLive();
   cookieBar();
 }
@@ -464,13 +464,15 @@ async function renderTeachers(){
   try{ await names(); }catch(e){ el.innerHTML='<p class="err">Öğretmenler yüklenemedi.</p>'; return; }
   const ts=state.people.filter(p=>p.role==='teacher');
   el.innerHTML=`${ts.length?'':'<p class="muted" style="margin-top:16px">Henüz öğretmen hesabı yok.</p>'}
-  ${ts.map(t=>`<details class="rec"><summary><b>${esc(t.full_name)}</b><span>${t.active?esc(t.cls||''):'Pasif'}</span></summary>
+  ${ts.map(t=>`<details class="rec" ${state.delId===t.id?'open':''}><summary><b>${esc(t.full_name)}</b><span>${t.active?esc(t.cls||''):'Pasif'}</span></summary>
     <dl><dt>Sınıf</dt><dd>${esc(t.cls||'–')}</dd><dt>Kullanıcı adı</dt><dd>${esc(t.username)}</dd>
     <dt>Durum</dt><dd>${t.active?'Aktif':'Pasif'}${t.must_change?', ilk şifresini henüz değiştirmedi':''}</dd></dl>
     <div class="acts" style="margin:0 4px 16px"><button class="small" onclick="toggleT('${t.id}',${!t.active})">${t.active?'Pasif yap':'Aktif yap'}</button>
     <select id="cls-${t.id}" aria-label="Sınıfı" style="width:auto;padding:6px 10px;font-size:14px">${CLASSES.map(c=>`<option ${t.cls===c?'selected':''}>${c}</option>`).join('')}</select><button class="small" onclick="setCls('${t.id}')">Sınıfı kaydet</button>
     <button class="small" onclick="resetPw('${t.id}')">Şifre sıfırla</button>
-    <button class="small" onclick="copySetup(this)">Kurulum bağlantısını kopyala</button></div></details>`).join('')}
+    <button class="small" onclick="copySetup(this)">Kurulum bağlantısını kopyala</button>
+    <button class="small" style="border-color:var(--warn);color:var(--warn)" onclick="askDel('${t.id}')">Öğretmeni sil</button></div>
+    ${state.delId===t.id?`<div class="acts" style="margin:0 4px 16px;align-items:center"><input id="pin-${t.id}" type="password" inputmode="numeric" autocomplete="off" placeholder="Silme PIN'i" style="width:auto;max-width:160px"><button class="small dark" onclick="delT('${t.id}')">Silmeyi onayla</button><button class="small" onclick="state.delId=null;renderTeachers()">Vazgeç</button><span class="err" id="delerr-${t.id}" style="margin:0"></span></div>`:''}</details>`).join('')}
   <details class="rec" ${state.addOpen?'open':''}><summary><b>Yeni öğretmen ekle</b><span>+</span></summary><div style="padding:0 4px 18px">
   <label for="nn">Ad soyad</label><input id="nn">
   <label for="nc">Sınıf</label><select id="nc">${CLASSES.map(c=>`<option>${c}</option>`).join('')}</select>
@@ -495,6 +497,13 @@ async function addT(){
   catch(e){ b.disabled=false; b.textContent='Öğretmeni ekle'; setErr(e.message); }
 }
 async function setCls(id){ const v=$('cls-'+id).value; const {error}=await sb.from('profiles').update({cls:v}).eq('id',id); if(error) alert('Değiştirilemedi.'); renderTeachers(); }
+function askDel(id){ state.delId=id; renderTeachers().then(()=>{const x=$('pin-'+id);if(x)x.focus()}); }
+async function delT(id){ const p=$('pin-'+id).value.trim(), e=$('delerr-'+id); if(!p){ e.textContent='PIN girin.'; return; } const t=(state.people||[]).find(x=>x.id===id); if(!confirm((t?t.full_name:'Bu öğretmen')+' kalıcı olarak silinecek. Emin misiniz?')) return; try{ await callAdmin({action:'delete',id,pin:p}); state.delId=null; renderTeachers(); }catch(err){ e.textContent=err.message; } }
+async function renderPin(){ const el=$('pinarea'); if(!el) return; let set=false; try{ set=(await callAdmin({action:'pin_status'})).set; }catch(e){ el.innerHTML='<p class="err">'+esc(e.message)+'</p>'; return; }
+  el.innerHTML=(set?'<label for="pold">Mevcut PIN</label><input id="pold" type="password" inputmode="numeric" autocomplete="off">':'<p class="muted">Öğretmen silebilmek için önce bir PIN belirleyin (4-8 rakam).</p>')
+   +'<div class="row"><div><label for="pnew">'+(set?'Yeni PIN':'PIN')+'</label><input id="pnew" type="password" inputmode="numeric" autocomplete="off"></div><div><label for="pnew2">'+(set?'Yeni PIN (tekrar)':'PIN (tekrar)')+'</label><input id="pnew2" type="password" inputmode="numeric" autocomplete="off"></div></div>'
+   +'<button style="margin-top:14px" onclick="savePin()">'+(set?'PIN değiştir':'PIN kaydet')+'</button><div class="err" id="pinerr"></div><p class="ok" id="pinok"></p>'; }
+async function savePin(){ const a=$('pnew').value.trim(), b=$('pnew2').value.trim(), o=$('pold')?$('pold').value.trim():''; $('pinerr').textContent=''; if(!/^\d{4,8}$/.test(a)){ $('pinerr').textContent='PIN 4-8 rakamdan oluşmalı.'; return; } if(a!==b){ $('pinerr').textContent='İki PIN aynı değil.'; return; } try{ await callAdmin({action:'set_pin',new_pin:a,pin:o}); await renderPin(); $('pinok').textContent='PIN kaydedildi.'; }catch(e){ $('pinerr').textContent=e.message; } }
 async function toggleT(id,val){ const {error}=await sb.from('profiles').update({active:val}).eq('id',id); if(error) alert('Değiştirilemedi.'); renderTeachers(); }
 async function resetPw(id){
   const p=prompt('Yeni geçici şifre (en az 8 karakter). Öğretmen ilk girişte değiştirecek:'); if(p===null) return;
@@ -506,7 +515,8 @@ function copySetup(b){ const u=location.origin+BASE+'kurulum'; try{navigator.cli
 function settingsHTML(){
   return '<label for="sn">Okulun adı</label><input id="sn" value="'+esc(school)+'" placeholder="Örneğin: Papatya Anaokulu">'
    +'<div class="row"><div><label for="ns">Bildirim başlangıcı</label><input id="ns" type="time" value="'+HOURS[0]+'"></div><div><label for="ne">Bildirim bitişi</label><input id="ne" type="time" value="'+HOURS[1]+'"></div></div>'
-   +'<button class="dark" onclick="saveSchool()">Kaydet</button><div class="err" id="err" role="alert"></div><p class="ok" id="snok"></p>';
+   +'<button class="dark" onclick="saveSchool()">Kaydet</button><div class="err" id="err" role="alert"></div><p class="ok" id="snok"></p>'
+   +'<h2 style="margin-top:32px;font-size:20px">Öğretmen silme PIN\'i</h2><div id="pinarea"><p class="muted">Yükleniyor…</p></div>';
 }
 async function saveSchool(){
   const n=$('sn').value.trim();
