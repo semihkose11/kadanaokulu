@@ -102,6 +102,16 @@ button,.btn{white-space:nowrap;font:600 16px "Source Serif 4",Georgia,serif;bord
 .note{font-size:14px;color:var(--soft);border-top:1px solid var(--line);margin-top:26px;padding-top:12px}
 .share{display:inline-block;vertical-align:-3px}
 @media print{.top,.tabs,.noprint,.cookie{display:none!important} main{padding:0}}
+/* telefon düzeni */
+@media(max-width:560px){
+  .top .in{grid-template-columns:1fr 1fr;grid-template-areas:"brand brand" "l r";row-gap:12px;padding:12px 14px}
+  .top .brand{grid-area:brand;justify-self:center;font-size:18px;text-align:center}
+  .top .l{grid-area:l} .top .r{grid-area:r}
+  .brand .logo{width:38px;height:38px}
+  .pill{padding:8px 14px;font-size:14px}
+  main{padding:20px 16px 48px}
+  h1{font-size:26px}
+}
 </style>
 </head>
 <body>
