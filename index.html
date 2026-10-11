@@ -164,7 +164,8 @@ const setErr=(m,id='err')=>{const e=$(id);if(e)e.textContent=m};
 let school=load('ak3_school_'+SCHOOL_ID,'');
 let HOURS=['08:00','17:15']; // bildirim saatleri (Türkiye saati)
 const trNow=()=>new Date().toLocaleTimeString('en-GB',{timeZone:'Europe/Istanbul',hour:'2-digit',minute:'2-digit',hour12:false});
-const inHours=()=>{const t=trNow();return t>=HOURS[0]&&t<HOURS[1]};
+const trDay=()=>new Date().toLocaleDateString('en-US',{timeZone:'Europe/Istanbul',weekday:'short'});
+const inHours=()=>{const d=trDay();if(d==='Sat'||d==='Sun')return false;const t=trNow();return t>=HOURS[0]&&t<HOURS[1]};
 function applySchool(){ const n=school||'Anaokulu'; const b=$('brand'); if(b) b.textContent=n; document.title=n; const m=document.querySelector('meta[name="apple-mobile-web-app-title"]'); if(m) m.setAttribute('content',n); }
 async function loadSchool(){ try{ const {data}=await sb.from('schools').select('name,email_domain,classes,notify_start,notify_end').eq('id',SCHOOL_ID).maybeSingle(); if(data){ if(data.notify_start&&data.notify_end) HOURS=[data.notify_start.slice(0,5),data.notify_end.slice(0,5)]; if(data.name){ school=data.name; put('ak3_school_'+SCHOOL_ID,school); } if(data.email_domain) DOMAIN=data.email_domain; if(data.classes&&data.classes.length){ const ch=JSON.stringify(data.classes)!==JSON.stringify(CLASSES); CLASSES=data.classes; if(ch&&path==='form') route(); } } }catch(e){} applySchool(); }
 
@@ -272,7 +273,7 @@ async function sentHTML(){
   if(c.status!=='closed') state.poll=setInterval(()=>{ if(path==='gonderildi') route(); },5000);
   const st=c.status==='coming'?`<span class="status go">${esc(c.teacher_name||'Öğretmen')} geliyor</span>`:c.status==='closed'?'<span class="status">Görüşme tamamlandı</span>':'<span class="status">Yanıt bekleniyor</span>';
   return `<div class="center">
-    ${inHours()?'<h1>Haber verildi</h1>\n    <p class="lead">Öğretmen kapıda olduğunuzu öğrendi. Lütfen girişte bekleyin.</p>':'<h1>Kaydınız alındı</h1>\n    <p class="lead">Mesai saatleri ('+HOURS[0]+' – '+HOURS[1]+') dışında olduğumuz için öğretmenlere bildirim gönderilmedi. Lütfen girişteki görevliye başvurun.</p>'}
+    ${inHours()?'<h1>Haber verildi</h1>\n    <p class="lead">Öğretmen kapıda olduğunuzu öğrendi. Lütfen girişte bekleyin.</p>':'<h1>Kaydınız alındı</h1>\n    <p class="lead">Mesai saatleri (hafta içi '+HOURS[0]+' – '+HOURS[1]+') dışında olduğumuz için öğretmenlere bildirim gönderilmedi. Lütfen girişteki görevliye başvurun.</p>'}
     ${st}
     <p style="margin-top:28px"><a href="#form" onclick="state={}">Yeni kayıt oluştur</a></p></div>`;
 }
@@ -413,7 +414,7 @@ function logHTML(){
   return `<div class="seg" role="group" aria-label="Kayıt aralığı">
     <button aria-pressed="${m==='bugun'}" onclick="setMode('bugun')">Bugün</button>
     <button aria-pressed="${m==='son'}" onclick="setMode('son')">Son 500</button>
-    <button aria-pressed="${m==='cinarli'}" onclick="setMode('cinarli')">Çınarlı kayıt</button>
+    <button aria-pressed="${m==='cinarli'}" onclick="setMode('cinarli')">Çınarlı Anaokulu</button>
     <button aria-pressed="${m==='tarih'}" onclick="setMode('tarih')">Tarih gir</button>
   </div>
   ${m==='tarih'?`<label for="fd">Tarih</label><input id="fd" type="date" value="${state.day||dayKey(Date.now())}" onchange="state.day=this.value;renderLog()">`:''}
@@ -506,7 +507,7 @@ function settingsHTML(){
   return '<label for="sn">Okulun adı</label><input id="sn" value="'+esc(school)+'" placeholder="Örneğin: Papatya Anaokulu">'
    +'<p class="muted" style="font-size:15px">Bu ad sitenin üstünde, sekme başlığında, QR afişinde ve öğretmenlere giden bildirimlerde otomatik kullanılır. Telefonuna daha önce kurulum yapmış öğretmenlerin, bildirimin üstündeki uygulama adının da değişmesi için simgeyi silip yeniden eklemesi gerekir.</p>'
    +'<div class="row"><div><label for="ns">Bildirim başlangıcı</label><input id="ns" type="time" value="'+HOURS[0]+'"></div><div><label for="ne">Bildirim bitişi</label><input id="ne" type="time" value="'+HOURS[1]+'"></div></div>'
-   +'<p class="muted" style="font-size:15px">Bu saatler dışında veli kayıtları tutulur ama öğretmenlere bildirim gönderilmez. Saatler Türkiye saatine göredir.</p>'
+   +'<p class="muted" style="font-size:15px">Bildirimler yalnızca hafta içi bu saatler arasında gönderilir. Hafta sonu ve bu saatler dışında veli kayıtları tutulur ama öğretmenlere bildirim gönderilmez. Saatler Türkiye saatine göredir.</p>'
    +'<button class="dark" onclick="saveSchool()">Kaydet</button><div class="err" id="err" role="alert"></div><p class="ok" id="snok"></p>';
 }
 async function saveSchool(){
